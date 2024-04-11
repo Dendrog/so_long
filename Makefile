@@ -17,7 +17,7 @@ $(LIB):
 	@make re -C ./libft
 
 $(NAME): $(OBJS)
-	$(CC) $(CFLAGS) -Lmlx -lmlx -lXext -lX11 -o $(NAME) $(OBJS) $(LIB)
+	$(CC) $(SRCS) $(CFLAGS) -Lmlx -lmlx -lXext -lX11 $(LIB)
 
 %.o: %.c
 	@$(CC) $(CFLAGS) -c $< -o $@
