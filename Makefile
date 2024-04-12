@@ -1,8 +1,9 @@
-NAME =          a.out
+NAME =          so_long
 
 SRCS =  test.c\
 
-LIB = libft/libft.a
+LIB = libft/libft.a\
+		ft_printf/libftprintf.a
 
 #HEADR = pipex.h
 
@@ -15,9 +16,10 @@ all: $(LIB) $(NAME)
 
 $(LIB):
 	@make re -C ./libft
+	@make re -C ./ft_printf
 
 $(NAME): $(OBJS)
-	$(CC) $(SRCS) $(CFLAGS) -Lmlx -lmlx -lXext -lX11 $(LIB)
+	$(CC) $(SRCS) $(CFLAGS) -Lmlx -lmlx -lXext -lX11 -lm $(LIB) -o $(NAME)
 
 %.o: %.c
 	@$(CC) $(CFLAGS) -c $< -o $@
