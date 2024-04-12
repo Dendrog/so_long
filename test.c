@@ -39,23 +39,6 @@ void map_set(void *im[], int fd, void *ptr, void *wind)
     }
 }
 
-void    clear_back(void *im)
-{
-    unsigned int    *p;
-    int bpp;
-    int line;
-    int endian;
-
-    p = (unsigned int *)mlx_get_data_addr(im, &bpp, &line, &endian);
-    printf("%d\n",endian);
-    printf("%d", line);
-    for(int i=100;i<150; i++)
-    {
-        //write(1, &p[i],1);
-        printf("%X\n",p[i]);
-    }
-}
-
 int main(){
     void    *ptr;
     void    *wind;
@@ -77,11 +60,9 @@ int main(){
     im[1] = mlx_xpm_file_to_image ( ptr, "./textures/stone2.xpm", &width, &height);
     im[2] = mlx_xpm_file_to_image ( ptr, "./textures/ondia2.xpm", &width, &height);
     im[3] = mlx_xpm_file_to_image ( ptr, "./textures/potal2.xpm", &width, &height);
-    im[4] = mlx_xpm_file_to_image ( ptr, "./textures/steve2.xpm", &width, &height); //steve
-    clear_back(im[4]);
+    im[4] = mlx_xpm_file_to_image ( ptr, "./textures/front2.xpm", &width, &height); //steve
     fd = open("./maps/testmap.ber",O_RDONLY);
     map_set(im, fd, ptr, wind);
-    
     //mlx_put_image_to_window(ptr, wind, im, 50, 50);
     mlx_loop(ptr);
 }
