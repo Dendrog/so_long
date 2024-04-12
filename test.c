@@ -94,11 +94,16 @@ void    *make_window(void *ptr, char *mapname)
     return (mlx_new_window(ptr, width * 50, height * 50, "so_long"));
 }
 
-int	esc_close(int key)//, t_vars var)
+int	esc_close(int key)
 {
 	if (key == 65307)
         exit(0);
 	return (0);
+}
+
+int	x_close()
+{
+	exit(0);
 }
 
 int main(int argc, char *argv[]){
@@ -124,6 +129,7 @@ int main(int argc, char *argv[]){
         print_err("Error : mapfile open fail\n");
     map_set(im, fd, vars.mlx, vars.win);
     mlx_key_hook(vars.win, esc_close, &vars);
+	mlx_hook(vars.win, 17, 0, x_close, &vars);
     //mlx_key_hook(vars.win, esc_close, &vars);
     mlx_loop(vars.mlx);
 }
