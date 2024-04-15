@@ -7,6 +7,8 @@
 #include "./libft/libft.h"
 #include "./ft_printf/ft_printf.h"
 
+static char **g_map;
+
 typedef struct	s_vars {
 	void	*mlx;
 	void	*win;
@@ -53,14 +55,66 @@ void map_set(void *im[], int fd, void *ptr, void *wind)
     }
 }
 
+int check_mapname(char *mapname)
+{
+    char    *start;
+
+    start = ft_strnstr(mapname, ".ber", 255);
+    if (start == NULL)
+        return (0);
+    if (!ft_strncmp(start, ".ber", ft_strlen(start)))
+        return (1);
+    return (0);
+}
+
+int check_rectangle(char *mapname, int width)
+{
+    char    buf;
+    int fd;
+    int n;
+
+    fd = open(mapname, O_RDONLY);
+    if (fd < 0 )
+        print_err("Error : mapfile open fail\n");
+    n = 0;
+    while (1)
+    {
+        if (read(fd, &buf, 1) <= 0)
+            break;
+        if (buf == '\n')
+        {
+            if (width)
+                if (width != n)
+                    return (0);
+            width = n;
+            n = 0;
+            continue ;
+        }
+        else
+            n++;
+    }
+    if (width)
+        if (width != n)
+            return (0);
+    return (1);
+}
+
+void    map_to_array(char *mapname)
+{
+    //add
+}
+
 void    check_map(char *mapname)
 {
     int fd;
 
     fd = open(mapname, O_RDONLY);
-    if (fd < 0 )
+    if (fd < 0)
         print_err("Error : mapfile open fail\n");
-    
+    if (!check_mapname(mapname))
+        print_err("Error : mapname is not valid\n");
+    if (!check_rectangle(mapname, 0))
+        print_err("Error : mapname is not rectangle\n");
     close(fd);
 }
 
@@ -94,7 +148,7 @@ void    *make_window(void *ptr, char *mapname)
     return (mlx_new_window(ptr, width * 50, height * 50, "so_long"));
 }
 
-int	esc_close(int key)
+int	key_hook(int key)
 {
 	if (key == 65307)
         exit(0);
@@ -115,6 +169,7 @@ int main(int argc, char *argv[]){
 
     if (argc != 2)
         print_err("Error : no input mapfile\n");
+    check_map(argv[1]);
     vars.mlx = mlx_init();
     vars.win = make_window(vars.mlx, argv[1]);
     if (!vars.win)
@@ -128,7 +183,7 @@ int main(int argc, char *argv[]){
     if (fd < 0 )
         print_err("Error : mapfile open fail\n");
     map_set(im, fd, vars.mlx, vars.win);
-    mlx_key_hook(vars.win, esc_close, &vars);
+    mlx_key_hook(vars.win, key_hook, &vars);
 	mlx_hook(vars.win, 17, 0, x_close, &vars);
     //mlx_key_hook(vars.win, esc_close, &vars);
     mlx_loop(vars.mlx);
