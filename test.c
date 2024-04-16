@@ -6,13 +6,24 @@
 #include <fcntl.h>
 #include "./libft/libft.h"
 #include "./ft_printf/ft_printf.h"
-
-static char **g_map;
+#include "./get_next_line/get_next_line.h"
 
 typedef struct	s_vars {
 	void	*mlx;
 	void	*win;
 }				t_vars;
+
+typedef struct	s_stats {
+	int row;
+    int col;
+    int score;
+    int width;
+    int height;
+}				t_stats;
+
+static t_stats  g_stat;
+
+static char **g_map;
 
 void    print_err(char *s)
 {
@@ -99,9 +110,115 @@ int check_rectangle(char *mapname, int width)
     return (1);
 }
 
+void    set_wh(char *mapname)
+{
+    int fd;
+    char    buf;
+    int flag;
+
+    fd = open(mapname, O_RDONLY);
+    if (fd < 0 )
+        print_err("Error : mapfile open fail\n");
+    g_stat.width = 0;
+    g_stat.height = 1;
+    flag = 0;
+    while (1)
+    {
+        if (read(fd, &buf, 1) <= 0)
+            break;
+        if (buf == '\n')
+        {
+            flag = 1;
+            g_stat.height++;
+        }
+        if (flag == 0)
+            g_stat.width++;
+    }
+    close(fd);
+}
+
 void    map_to_array(char *mapname)
 {
-    //add
+    char    *tmp;
+    char    **m;
+    int fd;
+
+    set_wh(mapname);
+    fd = open(mapname, O_RDONLY);
+    if (fd < 0)
+        print_err("Error : mapfile open fail\n");
+    g_map = (char **)malloc(sizeof(char *) * (g_stat.height + 1));
+    if (!g_map)
+        print_err("Error : allocate fail\n");
+    m = g_map;
+    while (1)
+    {
+        tmp = get_next_line(fd);
+        if (tmp == NULL)
+            break;
+        *(m++) = tmp;
+    }
+    m = NULL;
+    g_stat.width = ft_strlen(*g_map);
+}
+
+void check_entity()
+{
+    char    **tmp;
+    int c;
+    int e;
+    int p;
+
+    c = 0;
+    e = 0;
+    p = 0;
+    tmp = g_map;
+    while (*tmp)
+    {
+        if (**tmp != '0' && **tmp != '1' && **tmp != 'C' && **tmp != 'E' && **tmp != 'P')
+            print_err("Error : invalid map tile\n");
+        if (**tmp == 'C')
+            c++;
+        if (**tmp == 'E')
+            e++;
+        if (**tmp == 'P')
+            p++;
+        if (**tmp == 0)
+            tmp++;
+        else
+            (*tmp)++;
+    }
+    if (c < 1)
+        print_err("Error : no collection\n");
+    if (e != 1)
+        print_err("Error : no one exit\n");
+    if (p != 1)
+        print_err("Error : no one starting point\n");
+}
+
+void    check_wall()
+{
+    char    **tmp;
+    int i;
+    int k;
+
+    i = 0;
+    if (g_stat.width < 3 || g_stat.height < 3)
+        print_err("Error : not blocked\n");
+    tmp = g_map;
+    while (tmp[i])
+    {
+        k = 0;
+        if (i == 0 || tmp[i + 1] == NULL)
+        {
+            while (tmp[i][k])
+                if (tmp[i][k++] != '1')
+                    print_err("Error : not blocked\n");
+        }
+        if (tmp[i][0] != 'C' || tmp[i][ft_strlen(tmp[i])] != 'C')
+            print_err("Error : not blocked\n");
+        i++;
+    }
 }
 
 void    check_map(char *mapname)
@@ -115,6 +232,8 @@ void    check_map(char *mapname)
         print_err("Error : mapname is not valid\n");
     if (!check_rectangle(mapname, 0))
         print_err("Error : mapname is not rectangle\n");
+    map_to_array(mapname);
+    check_entity();
     close(fd);
 }
 
