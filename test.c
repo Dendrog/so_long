@@ -140,6 +140,7 @@ void    set_wh(char *mapname)
 void    map_to_array(char *mapname)
 {
     char    *tmp;
+    char    *chr;
     char    **m;
     int fd;
 
@@ -156,6 +157,9 @@ void    map_to_array(char *mapname)
         tmp = get_next_line(fd);
         if (tmp == NULL)
             break;
+        chr = ft_strchr(tmp, '\n');
+        if (chr)
+            *chr = 0;
         *(m++) = tmp;
     }
     m = NULL;
@@ -168,25 +172,30 @@ void check_entity()
     int c;
     int e;
     int p;
+    int i;
 
     c = 0;
     e = 0;
     p = 0;
+    i = 0;
     tmp = g_map;
     while (*tmp)
     {
-        if (**tmp != '0' && **tmp != '1' && **tmp != 'C' && **tmp != 'E' && **tmp != 'P')
+        if ((*tmp)[i] != '0' && (*tmp)[i] != '1' && (*tmp)[i] != 'C' && (*tmp)[i] != 'E' && (*tmp)[i] != 'P' && (*tmp)[i] != 0 && (*tmp)[i] != '\n')
             print_err("Error : invalid map tile\n");
-        if (**tmp == 'C')
+        if ((*tmp)[i] == 'C')
             c++;
-        if (**tmp == 'E')
+        if ((*tmp)[i] == 'E')
             e++;
-        if (**tmp == 'P')
+        if ((*tmp)[i] == 'P')
             p++;
-        if (**tmp == 0)
+        if ((*tmp)[i] == '\n' || (*tmp)[i] == 0)
+        {
+            i = 0;
             tmp++;
+        }
         else
-            (*tmp)++;
+            i++;
     }
     if (c < 1)
         print_err("Error : no collection\n");
@@ -215,7 +224,7 @@ void    check_wall()
                 if (tmp[i][k++] != '1')
                     print_err("Error : not blocked\n");
         }
-        if (tmp[i][0] != 'C' || tmp[i][ft_strlen(tmp[i])] != 'C')
+        if (tmp[i][0] != '1' || tmp[i][ft_strlen(tmp[i]) - 1] != '1')
             print_err("Error : not blocked\n");
         i++;
     }
@@ -234,6 +243,7 @@ void    check_map(char *mapname)
         print_err("Error : mapname is not rectangle\n");
     map_to_array(mapname);
     check_entity();
+    check_wall();
     close(fd);
 }
 
