@@ -134,6 +134,8 @@ void    set_wh(char *mapname)
         if (flag == 0)
             g_stat.width++;
     }
+    if (g_stat.width == 0)
+        print_err("Error : map is empty\n");
     close(fd);
 }
 
