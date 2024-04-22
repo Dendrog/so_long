@@ -378,7 +378,7 @@ int main(int argc, char *argv[]){
     if (argc != 2)
         print_err("Error : no input mapfile\n");
     check_map(argv[1]);
-    printf("%d %d", g_stat.height, g_stat.width);
+    //printf("%d %d", g_stat.height, g_stat.width);
     vars.mlx = mlx_init();
     vars.win = make_window(vars.mlx, argv[1]);
     if (!vars.win)
@@ -389,7 +389,7 @@ int main(int argc, char *argv[]){
     im[3] = mlx_xpm_file_to_image ( vars.mlx, "./textures/potal2.xpm", &width, &height);
     im[4] = mlx_xpm_file_to_image ( vars.mlx, "./textures/front2.xpm", &width, &height); //steve
     fd = open(argv[1], O_RDONLY);
-    if (fd < 0 )
+    if (fd < 0)
         print_err("Error : mapfile open fail\n");
     map_set(im, fd, vars.mlx, vars.win);
     mlx_key_hook(vars.win, key_hook, &vars);
