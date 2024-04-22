@@ -17,6 +17,7 @@ typedef struct	s_stats {
 	int row;
     int col;
     int score;
+    int c;
     int width;
     int height;
 }				t_stats;
@@ -164,19 +165,18 @@ void    map_to_array(char *mapname)
             *chr = 0;
         *(m++) = tmp;
     }
-    m = NULL;
+    *m = NULL;
     g_stat.width = ft_strlen(*g_map);
 }
 
 void check_entity()
 {
     char    **tmp;
-    int c;
     int e;
     int p;
     int i;
 
-    c = 0;
+    g_stat.c = 0;
     e = 0;
     p = 0;
     i = 0;
@@ -186,7 +186,7 @@ void check_entity()
         if ((*tmp)[i] != '0' && (*tmp)[i] != '1' && (*tmp)[i] != 'C' && (*tmp)[i] != 'E' && (*tmp)[i] != 'P' && (*tmp)[i] != 0 && (*tmp)[i] != '\n')
             print_err("Error : invalid map tile\n");
         if ((*tmp)[i] == 'C')
-            c++;
+            g_stat.c++;
         if ((*tmp)[i] == 'E')
             e++;
         if ((*tmp)[i] == 'P')
@@ -199,7 +199,7 @@ void check_entity()
         else
             i++;
     }
-    if (c < 1)
+    if (g_stat.c < 1)
         print_err("Error : no collection\n");
     if (e != 1)
         print_err("Error : no one exit\n");
@@ -232,6 +232,82 @@ void    check_wall()
     }
 }
 
+void    free_mem(char **tmp)
+{
+    char    **ptr;
+
+    ptr = tmp;
+    while (*ptr)
+    {
+        free(*ptr);
+        ptr++;
+    }
+    free(tmp);
+}
+
+int dfs(char **tmp, int row, int col)
+{
+    int count;
+
+    count = 0;
+    if (tmp[row][col] == '1')
+        return (0);
+    if (tmp[row][col] == 'C' || tmp[row][col] == 'E')
+        count ++;
+    tmp[row][col] = '1';
+    count += dfs(tmp, row + 1, col);
+    count += dfs(tmp, row - 1, col);
+    count += dfs(tmp, row, col + 1);
+    count += dfs(tmp, row, col - 1);
+    return (count);
+}
+
+void    pre_dfs_one(int row, int col)
+{
+    char    **tmp;
+    int k;
+
+    k = 0;
+    tmp = (char **)malloc(sizeof(char *) * (g_stat.height + 1));
+    if (!tmp)
+        print_err("Error : allocate fail\n");
+    while (g_map[k])
+    {
+        tmp[k] = ft_strdup(g_map[k]);
+        k++;
+    }
+    tmp[k] = NULL;
+    k = dfs(tmp, row, col);
+    if (k != g_stat.c + 1)
+        print_err("Error : no path in map\n");
+    free_mem(tmp);
+    //return (k);
+}
+
+void    check_path()
+{
+    char    **ptr;
+    int k;
+    int i;
+
+    k = 0;
+    ptr = g_map;
+    while (ptr[k])
+    {
+        i = 0;
+        while (ptr[k][i])
+        {
+            if (ptr[k][i] == 'P')
+            {
+                pre_dfs_one(k, i);
+                return ;
+            }
+            i++;
+        }
+        k++;
+    }
+}
+
 void    check_map(char *mapname)
 {
     int fd;
@@ -246,6 +322,7 @@ void    check_map(char *mapname)
     map_to_array(mapname);
     check_entity();
     check_wall();
+    check_path();
     close(fd);
 }
 
@@ -301,6 +378,7 @@ int main(int argc, char *argv[]){
     if (argc != 2)
         print_err("Error : no input mapfile\n");
     check_map(argv[1]);
+    printf("%d %d", g_stat.height, g_stat.width);
     vars.mlx = mlx_init();
     vars.win = make_window(vars.mlx, argv[1]);
     if (!vars.win)
