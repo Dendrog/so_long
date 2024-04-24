@@ -11,6 +11,7 @@
 typedef struct	s_vars {
 	void	*mlx;
 	void	*win;
+    void    *player[5];
 }				t_vars;
 
 typedef struct	s_stats {
@@ -35,35 +36,35 @@ void    print_err(char *s)
 void map_set(void *im[], int fd, void *ptr, void *wind)
 {
     char bit;
-    int raw;
+    int row;
     int col;
 
-    raw = 0;
+    row = 0;
     col = 0;
     while (read(fd, &bit, 1))
     {
         if (bit == '0')
-            mlx_put_image_to_window(ptr, wind, im[0], raw, col);
+            mlx_put_image_to_window(ptr, wind, im[0], row, col);
         else if (bit == '1')
-            mlx_put_image_to_window(ptr, wind, im[1], raw, col);
+            mlx_put_image_to_window(ptr, wind, im[1], row, col);
         else if (bit == 'C')
         {
-            mlx_put_image_to_window(ptr, wind, im[0], raw, col);
-            mlx_put_image_to_window(ptr, wind, im[2], raw, col);
+            mlx_put_image_to_window(ptr, wind, im[0], row, col);
+            mlx_put_image_to_window(ptr, wind, im[2], row, col);
         }
         else if (bit == 'E')
-            mlx_put_image_to_window(ptr, wind, im[3], raw, col);
+            mlx_put_image_to_window(ptr, wind, im[3], row, col);
         else if (bit == 'P'){
-            mlx_put_image_to_window(ptr, wind, im[0], raw, col);
-            mlx_put_image_to_window(ptr, wind, im[4], raw, col);
+            mlx_put_image_to_window(ptr, wind, im[0], row, col);
+            mlx_put_image_to_window(ptr, wind, im[4], row, col);
         }
         if (bit == '\n')
         {
             col = col + 50;
-            raw = 0;
+            row = 0;
         }
         else
-            raw += 50;
+            row += 50;
     }
 }
 
@@ -245,20 +246,37 @@ void    free_mem(char **tmp)
     free(tmp);
 }
 
-int dfs(char **tmp, int row, int col)
+int dfs_c(char **tmp, int row, int col)
+{
+    int count;
+
+    count = 0;
+    if (tmp[row][col] == '1' || tmp[row][col] == 'E' || tmp[row][col] == 'V')
+        return (0);
+    if (tmp[row][col] == 'C')
+        count ++;
+    tmp[row][col] = 'V';
+    count += dfs_c(tmp, row + 1, col);
+    count += dfs_c(tmp, row - 1, col);
+    count += dfs_c(tmp, row, col + 1);
+    count += dfs_c(tmp, row, col - 1);
+    return (count);
+}
+
+int dfs_e(char **tmp, int row, int col)
 {
     int count;
 
     count = 0;
     if (tmp[row][col] == '1')
         return (0);
-    if (tmp[row][col] == 'C' || tmp[row][col] == 'E')
+    if (tmp[row][col] == 'E')
         count ++;
     tmp[row][col] = '1';
-    count += dfs(tmp, row + 1, col);
-    count += dfs(tmp, row - 1, col);
-    count += dfs(tmp, row, col + 1);
-    count += dfs(tmp, row, col - 1);
+    count += dfs_e(tmp, row + 1, col);
+    count += dfs_e(tmp, row - 1, col);
+    count += dfs_e(tmp, row, col + 1);
+    count += dfs_e(tmp, row, col - 1);
     return (count);
 }
 
@@ -277,7 +295,7 @@ void    pre_dfs_one(int row, int col)
         k++;
     }
     tmp[k] = NULL;
-    k = dfs(tmp, row, col);
+    k = dfs_c(tmp, row, col) + dfs_e(tmp, row, col);
     if (k != g_stat.c + 1)
         print_err("Error : no path in map\n");
     free_mem(tmp);
@@ -299,6 +317,8 @@ void    check_path()
         {
             if (ptr[k][i] == 'P')
             {
+                g_stat.row = k;
+                g_stat.col = i;
                 pre_dfs_one(k, i);
                 return ;
             }
@@ -356,10 +376,41 @@ void    *make_window(void *ptr, char *mapname)
     return (mlx_new_window(ptr, width * 50, height * 50, "so_long"));
 }
 
-int	key_hook(int key)
+void    move(int row, int col, t_vars vars, int n)
+{
+    if (g_map[g_stat.row + row][g_stat.col + col] == '1')
+        return ;
+    g_stat.score++;
+    if (g_map[g_stat.row + row][g_stat.col + col] == 'C')
+    {
+        g_stat.c--;
+        g_map[g_stat.row + row][g_stat.col + col] = '0';
+    }
+    if (g_map[g_stat.row + row][g_stat.col + col] == 'E')
+    {
+        if (!g_stat.score)
+            return ;
+        exit(0);
+    }
+    mlx_put_image_to_window(vars.ptr, vars.wind, vars.player[0], g_stat.row, g_stat.col);
+    ft_printf("%d\n", g_stat.score++);
+    g_stat.row += row;
+    g_stat.col += col;
+    mlx_put_image_to_window(vars.ptr, vars.wind, vars.player[n], g_stat.row, g_stat.col);
+}
+
+int	key_hook(int key, t_vars *vars) // w=119 a=97 s=115 d=100
 {
 	if (key == 65307)
         exit(0);
+    else if(key == 119) // w
+        move(-1,0,*vars,1);
+    else if(key == 97) // a
+        move(0,-1,*vars,2);
+    else if(key == 115) // s
+        move(1,0,*vars,3);
+    else if(key == 100) // d
+        move(0,1,*vars,4);
 	return (0);
 }
 
@@ -388,9 +439,15 @@ int main(int argc, char *argv[]){
     im[2] = mlx_xpm_file_to_image ( vars.mlx, "./textures/ondia2.xpm", &width, &height);
     im[3] = mlx_xpm_file_to_image ( vars.mlx, "./textures/potal2.xpm", &width, &height);
     im[4] = mlx_xpm_file_to_image ( vars.mlx, "./textures/front2.xpm", &width, &height); //steve
+    vars.player[0] = mlx_xpm_file_to_image ( vars.mlx, "./textures/grass2.xpm", &width, &height);
+    vars.player[1] = mlx_xpm_file_to_image ( vars.mlx, "./textures/front2.xpm", &width, &height);
+    vars.player[2] = mlx_xpm_file_to_image ( vars.mlx, "./textures/left2.xpm", &width, &height);
+    vars.player[3] = mlx_xpm_file_to_image ( vars.mlx, "./textures/back2.xpm", &width, &height);
+    vars.player[4] = mlx_xpm_file_to_image ( vars.mlx, "./textures/right2.xpm", &width, &height);
     fd = open(argv[1], O_RDONLY);
     if (fd < 0)
         print_err("Error : mapfile open fail\n");
+    g_stat.score = 0;
     map_set(im, fd, vars.mlx, vars.win);
     mlx_key_hook(vars.win, key_hook, &vars);
 	mlx_hook(vars.win, 17, 0, x_close, &vars);
