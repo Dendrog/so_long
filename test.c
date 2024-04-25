@@ -83,6 +83,7 @@ int check_mapname(char *mapname)
 int check_rectangle(char *mapname, int width)
 {
     char    buf;
+    char    tmp;
     int fd;
     int n;
 
@@ -94,6 +95,7 @@ int check_rectangle(char *mapname, int width)
     {
         if (read(fd, &buf, 1) <= 0)
             break;
+        tmp = buf;
         if (buf == '\n')
         {
             if (width)
@@ -338,7 +340,7 @@ void    check_map(char *mapname)
     if (!check_mapname(mapname))
         print_err("Error : mapname is not valid\n");
     if (!check_rectangle(mapname, 0))
-        print_err("Error : mapname is not rectangle\n");
+        print_err("Error : map is not rectangle\n");
     map_to_array(mapname);
     check_entity();
     check_wall();
@@ -376,7 +378,7 @@ void    *make_window(void *ptr, char *mapname)
     return (mlx_new_window(ptr, width * 50, height * 50, "so_long"));
 }
 
-void    move(int row, int col, t_vars vars, int n)
+void    move(int row, int col, t_vars *vars, int n)
 {
     if (g_map[g_stat.row + row][g_stat.col + col] == '1')
         return ;
@@ -388,30 +390,30 @@ void    move(int row, int col, t_vars vars, int n)
     }
     if (g_map[g_stat.row + row][g_stat.col + col] == 'E')
     {
-        if (!g_stat.score)
+        if (g_stat.c)
             return ;
         exit(0);
     }
-    mlx_put_image_to_window(vars.ptr, vars.wind, vars.player[0], g_stat.row, g_stat.col);
-    ft_printf("%d\n", g_stat.score++);
+    mlx_put_image_to_window(vars->mlx, vars->win, vars->player[0], (g_stat.col) * 50, (g_stat.row) * 50);
+    ft_printf("%d\n", g_stat.score);
     g_stat.row += row;
     g_stat.col += col;
-    mlx_put_image_to_window(vars.ptr, vars.wind, vars.player[n], g_stat.row, g_stat.col);
+    mlx_put_image_to_window(vars->mlx, vars->win, vars->player[n], (g_stat.col) * 50, (g_stat.row) * 50);
 }
 
-int	key_hook(int key, t_vars *vars) // w=119 a=97 s=115 d=100
+int key_hook(int key, t_vars *vars) // w=119 a=97 s=115 d=100
 {
 	if (key == 65307)
         exit(0);
-    else if(key == 119) // w
-        move(-1,0,*vars,1);
-    else if(key == 97) // a
-        move(0,-1,*vars,2);
-    else if(key == 115) // s
-        move(1,0,*vars,3);
-    else if(key == 100) // d
-        move(0,1,*vars,4);
-	return (0);
+    if(key == 119) // w
+        move(-1,0,vars,3);
+    if(key == 97) // a
+        move(0,-1,vars,2);
+    if(key == 115) // s
+        move(1,0,vars,1);
+    if(key == 100) // d
+        move(0,1,vars,4);
+    return 0;
 }
 
 int	x_close()
@@ -429,7 +431,6 @@ int main(int argc, char *argv[]){
     if (argc != 2)
         print_err("Error : no input mapfile\n");
     check_map(argv[1]);
-    //printf("%d %d", g_stat.height, g_stat.width);
     vars.mlx = mlx_init();
     vars.win = make_window(vars.mlx, argv[1]);
     if (!vars.win)
@@ -451,6 +452,5 @@ int main(int argc, char *argv[]){
     map_set(im, fd, vars.mlx, vars.win);
     mlx_key_hook(vars.win, key_hook, &vars);
 	mlx_hook(vars.win, 17, 0, x_close, &vars);
-    //mlx_key_hook(vars.win, esc_close, &vars);
     mlx_loop(vars.mlx);
 }
