@@ -11,7 +11,7 @@
 typedef struct	s_vars {
 	void	*mlx;
 	void	*win;
-    void    *player[5];
+    void    *player[6];
 }				t_vars;
 
 typedef struct	s_stats {
@@ -49,15 +49,17 @@ void map_set(void *im[], int fd, void *ptr, void *wind)
             mlx_put_image_to_window(ptr, wind, im[1], row, col);
         else if (bit == 'C')
         {
-            mlx_put_image_to_window(ptr, wind, im[0], row, col);
+            //mlx_put_image_to_window(ptr, wind, im[0], row, col);
             mlx_put_image_to_window(ptr, wind, im[2], row, col);
         }
         else if (bit == 'E')
             mlx_put_image_to_window(ptr, wind, im[3], row, col);
         else if (bit == 'P'){
-            mlx_put_image_to_window(ptr, wind, im[0], row, col);
+            //mlx_put_image_to_window(ptr, wind, im[0], row, col);
             mlx_put_image_to_window(ptr, wind, im[4], row, col);
         }
+        else if (bit == 'I')
+            mlx_put_image_to_window(ptr, wind, im[5], row, col);
         if (bit == '\n')
         {
             col = col + 50;
@@ -186,7 +188,7 @@ void check_entity()
     tmp = g_map;
     while (*tmp)
     {
-        if ((*tmp)[i] != '0' && (*tmp)[i] != '1' && (*tmp)[i] != 'C' && (*tmp)[i] != 'E' && (*tmp)[i] != 'P' && (*tmp)[i] != 0 && (*tmp)[i] != '\n')
+        if ((*tmp)[i] != '0' && (*tmp)[i] != '1' && (*tmp)[i] != 'C' && (*tmp)[i] != 'E' && (*tmp)[i] != 'P' && (*tmp)[i] != 'I' && (*tmp)[i] != 0 && (*tmp)[i] != '\n')
             print_err("Error : invalid map tile\n");
         if ((*tmp)[i] == 'C')
             g_stat.c++;
@@ -253,7 +255,7 @@ int dfs_c(char **tmp, int row, int col)
     int count;
 
     count = 0;
-    if (tmp[row][col] == '1' || tmp[row][col] == 'E' || tmp[row][col] == 'V')
+    if (tmp[row][col] == '1' || tmp[row][col] == 'E' || tmp[row][col] == 'V' || tmp[row][col] == 'I')
         return (0);
     if (tmp[row][col] == 'C')
         count ++;
@@ -270,7 +272,7 @@ int dfs_e(char **tmp, int row, int col)
     int count;
 
     count = 0;
-    if (tmp[row][col] == '1')
+    if (tmp[row][col] == '1' || tmp[row][col] == 'I')
         return (0);
     if (tmp[row][col] == 'E')
         count ++;
@@ -380,6 +382,8 @@ void    *make_window(void *ptr, char *mapname)
 
 void    move(int row, int col, t_vars *vars, int n)
 {
+    char    *tmp;
+
     if (g_map[g_stat.row + row][g_stat.col + col] == '1')
         return ;
     g_stat.score++;
@@ -388,6 +392,8 @@ void    move(int row, int col, t_vars *vars, int n)
         g_stat.c--;
         g_map[g_stat.row + row][g_stat.col + col] = '0';
     }
+    if (g_map[g_stat.row + row][g_stat.col + col] == 'I')
+        exit(0);
     if (g_map[g_stat.row + row][g_stat.col + col] == 'E')
     {
         if (g_stat.c)
@@ -396,6 +402,10 @@ void    move(int row, int col, t_vars *vars, int n)
     }
     mlx_put_image_to_window(vars->mlx, vars->win, vars->player[0], (g_stat.col) * 50, (g_stat.row) * 50);
     ft_printf("%d\n", g_stat.score);
+    tmp = ft_itoa(g_stat.score);
+    mlx_put_image_to_window(vars->mlx, vars->win, vars->player[5], 0, 0);
+    mlx_string_put(vars->mlx, vars->win, 20, 30, 0xFF0000, tmp);
+    free(tmp);
     g_stat.row += row;
     g_stat.col += col;
     mlx_put_image_to_window(vars->mlx, vars->win, vars->player[n], (g_stat.col) * 50, (g_stat.row) * 50);
@@ -423,7 +433,7 @@ int	x_close()
 
 int main(int argc, char *argv[]){
     t_vars  vars;
-    void    *im[5];
+    void    *im[6];
     int width;
     int height;
     int fd;
@@ -439,12 +449,14 @@ int main(int argc, char *argv[]){
     im[1] = mlx_xpm_file_to_image ( vars.mlx, "./textures/stone2.xpm", &width, &height);
     im[2] = mlx_xpm_file_to_image ( vars.mlx, "./textures/ondia2.xpm", &width, &height);
     im[3] = mlx_xpm_file_to_image ( vars.mlx, "./textures/potal2.xpm", &width, &height);
-    im[4] = mlx_xpm_file_to_image ( vars.mlx, "./textures/front2.xpm", &width, &height); //steve
+    im[4] = mlx_xpm_file_to_image ( vars.mlx, "./textures/front2.xpm", &width, &height);
+    im[5] = mlx_xpm_file_to_image ( vars.mlx, "./textures/zombie2.xpm", &width, &height);
     vars.player[0] = mlx_xpm_file_to_image ( vars.mlx, "./textures/grass2.xpm", &width, &height);
     vars.player[1] = mlx_xpm_file_to_image ( vars.mlx, "./textures/front2.xpm", &width, &height);
     vars.player[2] = mlx_xpm_file_to_image ( vars.mlx, "./textures/left2.xpm", &width, &height);
     vars.player[3] = mlx_xpm_file_to_image ( vars.mlx, "./textures/back2.xpm", &width, &height);
     vars.player[4] = mlx_xpm_file_to_image ( vars.mlx, "./textures/right2.xpm", &width, &height);
+    vars.player[5] = im[1];
     fd = open(argv[1], O_RDONLY);
     if (fd < 0)
         print_err("Error : mapfile open fail\n");
