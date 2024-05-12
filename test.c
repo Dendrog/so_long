@@ -11,7 +11,7 @@
 typedef struct	s_vars {
 	void	*mlx;
 	void	*win;
-    void    *player[6];
+    void    *player[7];
 }				t_vars;
 
 typedef struct	s_stats {
@@ -134,7 +134,7 @@ void    set_wh(char *mapname)
             break;
         if (buf == '\n')
         {
-            flag = 1;
+            flag = 1;   
             g_stat.height++;
         }
         if (flag == 0)
@@ -255,11 +255,11 @@ int dfs_c(char **tmp, int row, int col)
     int count;
 
     count = 0;
-    if (tmp[row][col] == '1' || tmp[row][col] == 'E' || tmp[row][col] == 'V' || tmp[row][col] == 'I')
+    if (tmp[row][col] == '1' || tmp[row][col] == 'I')
         return (0);
-    if (tmp[row][col] == 'C')
+    if (tmp[row][col] == 'C' ||tmp[row][col] == 'E')
         count ++;
-    tmp[row][col] = 'V';
+    tmp[row][col] = '1';
     count += dfs_c(tmp, row + 1, col);
     count += dfs_c(tmp, row - 1, col);
     count += dfs_c(tmp, row, col + 1);
@@ -267,7 +267,7 @@ int dfs_c(char **tmp, int row, int col)
     return (count);
 }
 
-int dfs_e(char **tmp, int row, int col)
+/*int dfs_e(char **tmp, int row, int col)
 {
     int count;
 
@@ -282,7 +282,7 @@ int dfs_e(char **tmp, int row, int col)
     count += dfs_e(tmp, row, col + 1);
     count += dfs_e(tmp, row, col - 1);
     return (count);
-}
+}*/
 
 void    pre_dfs_one(int row, int col)
 {
@@ -299,11 +299,10 @@ void    pre_dfs_one(int row, int col)
         k++;
     }
     tmp[k] = NULL;
-    k = dfs_c(tmp, row, col) + dfs_e(tmp, row, col);
+    k = dfs_c(tmp, row, col);
     if (k != g_stat.c + 1)
         print_err("Error : no path in map\n");
     free_mem(tmp);
-    //return (k);
 }
 
 void    check_path()
@@ -396,11 +395,13 @@ void    move(int row, int col, t_vars *vars, int n)
         exit(0);
     if (g_map[g_stat.row + row][g_stat.col + col] == 'E')
     {
-        if (g_stat.c)
-            return ;
-        exit(0);
+        if (!g_stat.c)
+            exit(0);
     }
-    mlx_put_image_to_window(vars->mlx, vars->win, vars->player[0], (g_stat.col) * 50, (g_stat.row) * 50);
+    if (g_map[g_stat.row][g_stat.col] == 'E')
+        mlx_put_image_to_window(vars->mlx, vars->win, vars->player[6], (g_stat.col) * 50, (g_stat.row) * 50);
+    else
+        mlx_put_image_to_window(vars->mlx, vars->win, vars->player[0], (g_stat.col) * 50, (g_stat.row) * 50);
     ft_printf("%d\n", g_stat.score);
     tmp = ft_itoa(g_stat.score);
     mlx_put_image_to_window(vars->mlx, vars->win, vars->player[5], 0, 0);
@@ -408,7 +409,8 @@ void    move(int row, int col, t_vars *vars, int n)
     free(tmp);
     g_stat.row += row;
     g_stat.col += col;
-    mlx_put_image_to_window(vars->mlx, vars->win, vars->player[n], (g_stat.col) * 50, (g_stat.row) * 50);
+    if (g_map[g_stat.row][g_stat.col] != 'E')
+        mlx_put_image_to_window(vars->mlx, vars->win, vars->player[n], (g_stat.col) * 50, (g_stat.row) * 50);
 }
 
 int key_hook(int key, t_vars *vars) // w=119 a=97 s=115 d=100
@@ -457,6 +459,7 @@ int main(int argc, char *argv[]){
     vars.player[3] = mlx_xpm_file_to_image ( vars.mlx, "./textures/back2.xpm", &width, &height);
     vars.player[4] = mlx_xpm_file_to_image ( vars.mlx, "./textures/right2.xpm", &width, &height);
     vars.player[5] = im[1];
+    vars.player[6] = im[3];
     fd = open(argv[1], O_RDONLY);
     if (fd < 0)
         print_err("Error : mapfile open fail\n");
