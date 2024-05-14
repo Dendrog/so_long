@@ -1,12 +1,16 @@
 NAME =          so_long
 
-SRCS =  test.c\
+SRCS =  main.c\
+		so_long_utils1.c\
+		so_long_utils2.c\
+		so_long_utils3.c\
+		so_long_utils4.c
 
 LIB = libft/libft.a\
 		ft_printf/libftprintf.a\
 		get_next_line/gnl.a
 
-#HEADR = 
+HEADR = so_long.h
 
 CC = cc
 CFLAGS = -Wall -Wextra -Werror -g -fsanitize=address
@@ -20,7 +24,7 @@ $(LIB):
 	@make re -C ./ft_printf
 	@make re -C ./get_next_line
 
-$(NAME): $(OBJS)
+$(NAME): $(OBJS) $(HEADR)
 	$(CC) $(SRCS) $(CFLAGS) -Lmlx -lmlx -lXext -lX11 -lm $(LIB) -o $(NAME)
 
 %.o: %.c

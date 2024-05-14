@@ -6,7 +6,7 @@
 /*   By: jakim <jakim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 22:50:36 by jakim             #+#    #+#             */
-/*   Updated: 2024/05/12 23:43:29 by jakim            ###   ########.fr       */
+/*   Updated: 2024/05/14 14:43:21 by jakim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,4 +99,17 @@ int check_rectangle(char *mapname, int width)
         if (width != n)
             return (0);
     return (1);
+}
+
+void    free_mem(char **tmp)
+{
+    char    **ptr;
+
+    ptr = tmp;
+    while (*ptr)
+    {
+        free(*ptr);
+        ptr++;
+    }
+    free(tmp);
 }
