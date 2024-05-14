@@ -6,7 +6,7 @@
 /*   By: jakim <jakim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/14 13:41:22 by jakim             #+#    #+#             */
-/*   Updated: 2024/05/14 14:43:28 by jakim            ###   ########.fr       */
+/*   Updated: 2024/05/14 15:07:41 by jakim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,8 +39,6 @@ static void	re_image(int row, int col, t_vars *vars, int n)
 
 void	move(int row, int col, t_vars *vars, int n)
 {
-	char	*tmp;
-
 	if (g_map[g_stat.row + row][g_stat.col + col] == '1')
 		return ;
 	g_stat.score++;
@@ -59,32 +57,32 @@ void	move(int row, int col, t_vars *vars, int n)
 	re_image(row, col, vars, n);
 }
 
-static void	open_textures(void *im[6], t_vars vars)
+static void	open_textures(void *im[], t_vars *vars, int *width, int *height)
 {
-	im[0] = mlx_xpm_file_to_image(vars.mlx, "./textures/grass2.xpm", \
-			&width, &height);
-	im[1] = mlx_xpm_file_to_image(vars.mlx, "./textures/stone2.xpm", \
-			&width, &height);
-	im[2] = mlx_xpm_file_to_image(vars.mlx, "./textures/ondia2.xpm", \
-			&width, &height);
-	im[3] = mlx_xpm_file_to_image(vars.mlx, "./textures/potal2.xpm", \
-			&width, &height);
-	im[4] = mlx_xpm_file_to_image(vars.mlx, "./textures/front2.xpm", \
-			&width, &height);
-	im[5] = mlx_xpm_file_to_image(vars.mlx, "./textures/zombie2.xpm", \
-			&width, &height);
-	vars.player[0] = mlx_xpm_file_to_image(vars.mlx, "./textures/grass2.xpm", \
-			&width, &height);
-	vars.player[1] = mlx_xpm_file_to_image(vars.mlx, "./textures/front2.xpm", \
-			&width, &height);
-	vars.player[2] = mlx_xpm_file_to_image(vars.mlx, "./textures/left2.xpm", \
-			&width, &height);
-	vars.player[3] = mlx_xpm_file_to_image(vars.mlx, "./textures/back2.xpm", \
-			&width, &height);
-	vars.player[4] = mlx_xpm_file_to_image(vars.mlx, "./textures/right2.xpm", \
-			&width, &height);
-	vars.player[5] = im[1];
-	vars.player[6] = im[3];
+	im[0] = mlx_xpm_file_to_image(vars->mlx, "./textures/grass2.xpm", \
+			width, height);
+	im[1] = mlx_xpm_file_to_image(vars->mlx, "./textures/stone2.xpm", \
+			width, height);
+	im[2] = mlx_xpm_file_to_image(vars->mlx, "./textures/ondia2.xpm", \
+			width, height);
+	im[3] = mlx_xpm_file_to_image(vars->mlx, "./textures/potal2.xpm", \
+			width, height);
+	im[4] = mlx_xpm_file_to_image(vars->mlx, "./textures/front2.xpm", \
+			width, height);
+	im[5] = mlx_xpm_file_to_image(vars->mlx, "./textures/zombie2.xpm", \
+			width, height);
+	vars->player[0] = mlx_xpm_file_to_image(vars->mlx, "./textures/grass2.xpm", \
+			width, height);
+	vars->player[1] = mlx_xpm_file_to_image(vars->mlx, "./textures/front2.xpm", \
+			width, height);
+	vars->player[2] = mlx_xpm_file_to_image(vars->mlx, "./textures/left2.xpm", \
+			width, height);
+	vars->player[3] = mlx_xpm_file_to_image(vars->mlx, "./textures/back2.xpm", \
+			width, height);
+	vars->player[4] = mlx_xpm_file_to_image(vars->mlx, "./textures/right2.xpm", \
+			width, height);
+	vars->player[5] = im[1];
+	vars->player[6] = im[3];
 }
 
 int	main(int argc, char *argv[])
@@ -97,11 +95,12 @@ int	main(int argc, char *argv[])
 
 	if (argc != 2)
 		print_err("Error : no input mapfile\n");
-	check_map(argv[1]);
+	check_map(argv[1], &g_stat, &g_map);
 	vars.mlx = mlx_init();
 	vars.win = make_window(vars.mlx, argv[1]);
 	if (!vars.win)
 		print_err("Error : window fail\n");
+	open_textures(im, &vars, &width, &height);
 	fd = open(argv[1], O_RDONLY);
 	if (fd < 0)
 		print_err("Error : mapfile open fail\n");

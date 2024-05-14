@@ -6,20 +6,20 @@
 /*   By: jakim <jakim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/14 13:36:26 by jakim             #+#    #+#             */
-/*   Updated: 2024/05/14 13:37:44 by jakim            ###   ########.fr       */
+/*   Updated: 2024/05/14 15:12:11 by jakim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "so_long.h"
 
-void check_entity(t_stats g_stat)
+void check_entity(t_stats *g_stat, char **g_map)
 {
     char    **tmp;
     int e;
     int p;
     int i;
 
-    g_stat.c = 0;
+    g_stat->c = 0;
     e = 0;
     p = 0;
     i = 0;
@@ -29,7 +29,7 @@ void check_entity(t_stats g_stat)
         if ((*tmp)[i] != '0' && (*tmp)[i] != '1' && (*tmp)[i] != 'C' && (*tmp)[i] != 'E' && (*tmp)[i] != 'P' && (*tmp)[i] != 'I' && (*tmp)[i] != 0 && (*tmp)[i] != '\n')
             print_err("Error : invalid map tile\n");
         if ((*tmp)[i] == 'C')
-            g_stat.c++;
+            g_stat->c++;
         if ((*tmp)[i] == 'E')
             e++;
         if ((*tmp)[i] == 'P')
@@ -42,7 +42,7 @@ void check_entity(t_stats g_stat)
         else
             i++;
     }
-    if (g_stat.c < 1)
+    if (g_stat->c < 1)
         print_err("Error : no collection\n");
     if (e != 1)
         print_err("Error : no one exit\n");
@@ -50,14 +50,14 @@ void check_entity(t_stats g_stat)
         print_err("Error : no one starting point\n");
 }
 
-void    check_wall(t_stats g_stat)
+void    check_wall(t_stats *g_stat, char **g_map)
 {
     char    **tmp;
     int i;
     int k;
 
     i = 0;
-    if (g_stat.width < 3 || g_stat.height < 3)
+    if (g_stat->width < 3 || g_stat->height < 3)
         print_err("Error : not blocked\n");
     tmp = g_map;
     while (tmp[i])
@@ -92,13 +92,13 @@ int dfs_c(char **tmp, int row, int col)
     return (count);
 }
 
-void    pre_dfs_one(int row, int col, char **g_map, t_stats g_stat)
+void    pre_dfs_one(int row, int col, char **g_map, t_stats *g_stat)
 {
     char    **tmp;
     int k;
 
     k = 0;
-    tmp = (char **)malloc(sizeof(char *) * (g_stat.height + 1));
+    tmp = (char **)malloc(sizeof(char *) * (g_stat->height + 1));
     if (!tmp)
         print_err("Error : allocate fail\n");
     while (g_map[k])
@@ -108,7 +108,7 @@ void    pre_dfs_one(int row, int col, char **g_map, t_stats g_stat)
     }
     tmp[k] = NULL;
     k = dfs_c(tmp, row, col);
-    if (k != g_stat.c + 1)
+    if (k != g_stat->c + 1)
         print_err("Error : no path in map\n");
     free_mem(tmp);
 }
